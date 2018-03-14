@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschemadiscoverer/test/stringInstance/schema.json",
+  "title": "Test data for string instance",
+  "description": "This schema contains data to test string instances (6.3 in validation JSON specificacion)",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "att1": {
+          "type": "string",
+          "maxLength" : 0,
+          "minLength" : 2,
+          "pattern" : "^[\\w\\-\\.\\{\\}\\$\\+\\*\\[\\]`|~^@!,:\\\\]+$"
+        }
+      }
+    }
+  ],
+  "required": [
+    "att1"
+  ]
+}

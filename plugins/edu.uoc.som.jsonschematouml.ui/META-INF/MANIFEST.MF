@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: JSONSchematoUML
+Bundle-SymbolicName: edu.uoc.som.jsonschematouml.ui;singleton:=true
+Bundle-Version: 0.0.1.qualifier
+Bundle-Activator: edu.uoc.som.jsonschematouml.ui.JSONSchemaToUMLUIPlugin
+Bundle-Vendor: SOM Research Lab
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.emf.ecore;bundle-version="2.13.0",
+ org.eclipse.emf.ecore.xmi;bundle-version="2.13.0",
+ org.eclipse.uml2.uml;bundle-version="5.3.0",
+ org.eclipse.uml2.uml.resources;bundle-version="5.3.0",
+ edu.uoc.som.jsonschematouml
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: .

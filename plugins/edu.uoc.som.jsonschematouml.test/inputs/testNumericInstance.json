@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschemadiscoverer/test/numericInstance/schema.json",
+  "title": "Test data for numeric instance",
+  "description": "This schema contains data to test numeric instances (6.2 in validation JSON specificacion)",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "att1": {
+          "type": "number",
+          "multipleOf" : 2,
+          "minimum" : 0,
+          "maximum" : 10
+
+        },
+        "att2": {
+          "type": "integer",
+          "exclusiveMaximum" : 10,
+          "exclusiveMinimum" : 0
+        }
+      }
+    }
+  ],
+  "required": [
+    "att1",
+    "att2"
+  ]
+}

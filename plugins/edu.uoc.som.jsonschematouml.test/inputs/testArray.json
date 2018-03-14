@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschemadiscoverer/test/arrayInstance/schema.json",
+  "title": "Test data for array instance",
+  "description": "This schema contains data to test array instances (6.4 in validation JSON specificacion)",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "att1": {
+          "type": "array",
+          "items" : {
+            "type" : "string"
+          }
+        },
+        "att2": {
+          "type": "array",
+          "items" : {
+            "type" : "string",
+            "enum" : [
+              "val1",
+              "val2"
+            ]
+          }
+        },
+        "att2": {
+          "type": "array",
+          "items" : {
+            "type" : "integer"
+          }
+        }
+      }
+    }
+  ],
+  "required": [
+    "att1"
+  ]
+}
