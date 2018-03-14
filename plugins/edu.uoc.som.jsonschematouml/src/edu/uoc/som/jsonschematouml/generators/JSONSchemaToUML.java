@@ -1,6 +1,7 @@
 package edu.uoc.som.jsonschematouml.generators;
 
 import java.io.File;
+
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -30,6 +31,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
+/**
+ * Entry point for the JSONSchemaToUML tool. You should use this class as a façade for everything provided by the tool.
+ *
+ * Be aware that the current implementation is just a prototype to validate the feasibility of the idea. Further
+ * versions should refine this code and apply good Java practices. For now, this is just a proof-of-concept.
+ *
+ * The inner workings of this class is pretty straight-forward. Given a {@link File} (which can be a folder or a JSON
+ * file), the tool analyzes the document/s according to the JSON schema validation specification and creates the
+ * corresponding UML model.
+ *
+ * @version 0.0.1
+ */
 public class JSONSchemaToUML {
     class ProxyAssociation {
         Class owner;
