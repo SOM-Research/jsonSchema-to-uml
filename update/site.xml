@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/edu.uoc.som.jsonschematouml.feature_0.0.1.201803141213.jar" id="edu.uoc.som.jsonschematouml.feature" version="0.0.1.201803141213">
+      <category name="jsonschematouml"/>
+   </feature>
+   <category-def name="jsonschematouml" label="JSON Schema to UML">
+      <description>
+         Generate UML models from JSON Schema documents
+      </description>
+   </category-def>
+</site>
