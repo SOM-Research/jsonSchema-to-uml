@@ -18,7 +18,7 @@ To visualize the generated UML models:
 2. Click on *Help / Install New Software...*
 3. Click on *Add...* and fill in the form as indicated. The update site is 
 ```
-https://github.com/SOM-Research/jsonSchema-to-uml/update
+https://som-research.github.io/jsonSchema-to-uml/update/
 ```
 4. Select *JSONSchema to UML* then click on *Next*.
 5. Follow the the rest of the steps (license, etc...) and reboot Eclipse.
