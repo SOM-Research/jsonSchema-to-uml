@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/schema#",
-  "id": "https://edu.uoc.som-research/jsonschemadiscoverer/test/objectInstance/schema.json",
+  "id": "https://edu.uoc.som-research/jsonschematouml/test/objectInstance/schema.json",
   "title": "Test data for object instance",
   "description": "This schema contains data to test object instances (6.5 in validation JSON specificacion)",
   "type": "object",

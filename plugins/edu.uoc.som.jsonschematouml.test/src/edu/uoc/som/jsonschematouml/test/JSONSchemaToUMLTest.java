@@ -10,12 +10,13 @@ import edu.uoc.som.jsonschematouml.generators.JSONSchemaToUML;
 import java.io.File;
 
 public class JSONSchemaToUMLTest extends TestCase {
-
+    
     @Test
-    public void testLaunch() {
+    public void testLaunchAndSave() {
         JSONSchemaToUML io = new JSONSchemaToUML("test");
-        File input = new File("inputs");
+        File input = new File("inputs/fiware");
         io.launch(input);
+        io.saveModel(new File("outputs/model.uml"));
     }
 
     @Test
@@ -116,6 +117,13 @@ public class JSONSchemaToUMLTest extends TestCase {
                 assertEquals(1, property.getLower());
             }
         }
-
+    }
+    
+    @Test
+    public void testSet() {
+        JSONSchemaToUML io = new JSONSchemaToUML("test");
+        File input = new File("inputs/testSet");
+        io.launch(input);
+        io.saveModel(new File("outputs/model.uml"));
     }
 }

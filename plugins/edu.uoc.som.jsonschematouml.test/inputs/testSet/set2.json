@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschemadiscoverer/test/setInstance2/schema.json",
+  "title": "Test data for any instance",
+  "description": "This schema checks the use of several files",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "set2Att": {
+          "type": "boolean"
+        }
+      }
+    }
+  ],
+  "required": [
+    "set2Att"
+  ]
+}

@@ -41,14 +41,35 @@ import com.google.gson.stream.JsonReader;
  * file), the tool analyzes the document/s according to the JSON schema validation specification and creates the
  * corresponding UML model.
  *
- * @version 0.0.1
+ * @version 0.0.2
  */
 public class JSONSchemaToUML {
+	public static String DEFAULT_MODEL_NAME = "test";
+	
+    /**
+     * This class is used to represent proxy associations (i.e., the type will be resolved later)
+     *
+     */
     class ProxyAssociation {
+        /**
+         * The class tha owns this association
+         */
         Class owner;
+        /**
+         * If the association is a composite one (at source/target)
+         */
         boolean sourceComposition, targetComposition;
+        /**
+         * The aggregation kind of the association ends (source/target)
+         */
         AggregationKind sourceKind, targetKind;
+        /**
+         * The name of the association ends
+         */
         String sourceEnd, targetEnd;
+        /**
+         * Cardinalities
+         */
         int sourceUpper, sourceLower, targetUpper, targetLower;
     }
 
@@ -56,19 +77,19 @@ public class JSONSchemaToUML {
      * The Oracle is used to keep track of every concept (i.e., Class) created.
      * URIs are used to index the elements
      */
-    HashMap<String, Class> oracle;
+    HashMap<String, Class> oracle = new HashMap<>();
 
     /**
      * The references to classes used as superclasses found during the analysis
      * (to be later resolved by {@link #resolveSuperclasses()}
      */
-    HashMap<String, Class> superclassesFound;
+    HashMap<String, Class> superclassesFound = new HashMap<>();
 
     /**
      * The references to classes used in associations found during the analysis
      * (to be later resolved by {@link #resolveAssociations()}
      */
-    HashMap<String, ProxyAssociation> associationsFound;
+    HashMap<String, ProxyAssociation> associationsFound = new HashMap<>();
 
     /**
      * As we will generate UML models, we use the Eclipse UML2 Factory
@@ -94,27 +115,40 @@ public class JSONSchemaToUML {
     /**
      * Primitive types to be used in the model
      */
-    private HashMap<String, PrimitiveType> primitiveTypes;
+    private HashMap<String, PrimitiveType> primitiveTypes = new HashMap<>();
 
     /**
+     * Delegated constructor, it calls the {@link JSONSchemaToUML} constructor and uses the
+     * value of {@link JSONSchemaToUML.DEFAULT_MODEL_NAME} as model name
+     */
+    public JSONSchemaToUML() {
+    	initModel(DEFAULT_MODEL_NAME);
+    }
+    
+    /**
      * Main constructor of the class. It basically initializes the model and the oracle
+     * 
      * @param modelName The name for the model (and also the resulting file)
      */
     public JSONSchemaToUML(String modelName) {
-        oracle = new HashMap<>();
-        associationsFound = new HashMap<>();
-        superclassesFound = new HashMap<>();
-        primitiveTypes = new HashMap<>();
         initModel(modelName);
     }
-
+    
     /**
+     * Returns the model being discovered
+     * @return The model
+     */
+    public Model getModel() {
+		return model;
+	}
+
+	/**
      * Launches the tool to traverse a file/folder with JSON schemas and generate the corresponding UML models
      * @param inputFile The file to analyze (it can be a file or a folder, if folder, it will be recursively traversed)
      */
     public void launch(File inputFile) {
         if(inputFile == null || !inputFile.exists())
-            throw new IllegalArgumentException("The file must exist");
+            throw new JSONSchemaToUMLException("The file must exist");
 
         if(inputFile.isFile()) {
             analyze(inputFile);
@@ -123,14 +157,10 @@ public class JSONSchemaToUML {
                 analyze(inFile);
             }
         } else
-            throw new IllegalArgumentException("Invalid input");
+            throw new JSONSchemaToUMLException("Invalid input");
 
         resolveAssociations();
         resolveSuperclasses();
-    }
-
-    public Model getModel() {
-        return this.model;
     }
 
     /**
@@ -148,33 +178,18 @@ public class JSONSchemaToUML {
 		resourceSet = new ResourceSetImpl();
 		resourceSet.getPackageRegistry().put(UMLPackage.eNS_URI, UMLPackage.eINSTANCE);
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(UMLResource.FILE_EXTENSION, UMLResource.Factory.INSTANCE);
-//        ClassLoader classLoader = getClass().getClassLoader();
-//        File primitiveTypesLibraryFile = new File(classLoader.getResource("models/UMLPrimitiveTypes.library.uml").getFile());
-//        resourceSet = new ResourceSetImpl();
-//        resourceSet.getPackageRegistry().put(UMLPackage.eNS_URI, UMLPackage.eINSTANCE);
-//        resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(UMLResource.FILE_EXTENSION, UMLResource.Factory.INSTANCE);
-//        resourceSet.getURIConverter().getURIMap().put(URI.createURI("pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml"), URI.createFileURI(primitiveTypesLibraryFile.getAbsolutePath()));
-//        Model umlLibrary = (Model) resourceSet.getResource(URI.createURI(UMLResource.UML_PRIMITIVE_TYPES_LIBRARY_URI), true).getContents().get(0);
-//        model.createElementImport(umlLibrary.getOwnedType("Boolean"));
-//        model.createElementImport(umlLibrary.getOwnedType("String"));
-//        model.createElementImport(umlLibrary.getOwnedType("UnlimitedNatural"));
-//        model.createElementImport(umlLibrary.getOwnedType("Real"));
-//        model.createElementImport(umlLibrary.getOwnedType("Integer"));
 
+		// Class to reuse when something goes wrong
         unknown = model.createOwnedClass("Unknown", false);
-
-        PrimitiveType dateType = model.createOwnedPrimitiveType("Date");
-        primitiveTypes.put("Date", dateType);
-
     }
 
     /**
      * Analyzes a file conforming to the JSON schema in order to create the corresponding UML elements (which will
      * be stored in both the oracle and the model)
+     * 
      * @param file The file to analyze
      */
     private void analyze(File file) {
-
         // Let's start with the root element of the file
         JsonObject rootElement = null;
         try {
@@ -185,14 +200,12 @@ public class JSONSchemaToUML {
         }
 
         // Basic info from the schema
-        String schema = rootElement.get("$schema").getAsString();
+        if(!rootElement.has("id")) 
+        	throw new JSONSchemaToUMLException("The root element MUST have an id");
         String id = rootElement.get("id").getAsString();
-        String title = rootElement.get("title").getAsString();
-
+        JSONSchemaURI jsu = new JSONSchemaURI(id);
         // Inferring concept for this schema
-        String[] idSplit = id.split("/");
-        String modelConceptName = idSplit[idSplit.length-2];
-
+        String modelConceptName = jsu.digestName();
         analyzeRootSchemaElement(modelConceptName, rootElement);
     }
 
@@ -280,7 +293,7 @@ public class JSONSchemaToUML {
     }
 
     /**
-     * Analyzes a property for a object/concept
+     * Analyzes a property for an object/concept
      * @param concept The concept which includes such property
      * @param propertyName The name of the property
      * @param object The JSON object element to analyze
