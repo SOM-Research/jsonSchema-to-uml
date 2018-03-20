@@ -87,7 +87,7 @@ public class JSONSchemaToUML {
      * The references to classes used as superclasses found during the analysis
      * (to be later resolved by {@link #resolveSuperclasses()}
      */
-    HashMap<String, Class> superclassesFound = new HashMap<>();
+    HashMap<JSONSchemaURI, Class> superclassesFound = new HashMap<>();
 
     /**
      * The references to classes used in associations found during the analysis
@@ -269,11 +269,10 @@ public class JSONSchemaToUML {
                     // We interpret $ref elements as super classes for this element
                     // As such, the element should have been analyzed previously
                     String ref = allOfElementObj.get("$ref").getAsString();
-                    String[] refSplit = ref.split("/");
-                    String refClassName = refSplit[refSplit.length-1];
-                    // We mark the concept to hav a super class, it will be resolved
+                    JSONSchemaURI jsu = new JSONSchemaURI(ref);
+                    // We mark the concept to have a super class, it will be resolved
                     // afterwards by the {@link #resolveSuperclasses()} method
-                    superclassesFound.put(refClassName, concept);
+                    superclassesFound.put(jsu, concept);
                 } else if(allOfElementObj.has("properties")) {
                     // Properties elements will become the attributes/references of the element
                     JsonObject propertiesObj = allOfElementObj.get("properties").getAsJsonObject();
@@ -282,7 +281,7 @@ public class JSONSchemaToUML {
                         JsonObject propertyObj = propertiesObj.get(propertyKey).getAsJsonObject();
                         analyzeProperty(concept, propertyKey, propertyObj);
                     }
-                } // TODO Cover more cases according to the specificiation
+                } 
             }
         } else if (object.has("properties")) {
             // When an element has directly "properties" may mean that it does not have superclasses
@@ -349,7 +348,7 @@ public class JSONSchemaToUML {
                     addConstraint(concept, propertyName, "minLengthConstraint",
                             "self." + propertyName + ".size() >= " + object.get("minLength").getAsString());
                 if(object.has("pattern")) {
-                    // Section 6.3.3 in json-schema-validation. Resolved as OCL
+                    // Section 6.3.3 in json-schema-validation. Resolved as OCL, possible?
                     // TODO 6.3.3 in json-schema-validation
                 }
                 concept.createOwnedAttribute(propertyName, modelAttType);
@@ -458,12 +457,16 @@ public class JSONSchemaToUML {
      * They are resolved by this method :)
      */
     private void resolveSuperclasses() {
-        for(String refClassName : superclassesFound.keySet()) {
-            Class subClass = superclassesFound.get(refClassName);
-            Class foundClass = queryOracle(refClassName);
-            if(foundClass == null) {
-                foundClass = unknown;
+        for(JSONSchemaURI refClassURI : superclassesFound.keySet()) {
+            Class subClass = superclassesFound.get(refClassURI);
+            Class foundClass = null;
+            if(refClassURI.getFragment() != null) {
+            	foundClass = queryOracle(refClassURI.digestFragmentName());
+            } else {
+            	foundClass = queryOracle(refClassURI.digestName());
             }
+            if(foundClass == null) 
+                foundClass = unknown;
             subClass.getSuperClasses().add(foundClass);
         }
     }

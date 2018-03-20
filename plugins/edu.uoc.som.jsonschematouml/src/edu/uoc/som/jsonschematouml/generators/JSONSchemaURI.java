@@ -140,6 +140,29 @@ public class JSONSchemaURI {
 			return splitPath[splitPath.length-1]; 
 		}
 	}
+	
+	/**
+	 * Digest the name of a fragment. It iuses the last element of the
+	 * fragment
+	 * <br>
+	 * For instance:
+	 * <br>
+	 *   1. foo://example.com:8042/over/there.json#/fragment/name
+	 * <br>
+	 *   2. foo://example.com:8042/over/there.json#/fragment
+	 * <br>
+	 * returns:
+	 * <br>
+	 *   1. name
+	 * <br>
+	 *   2. fragment
+	 * 
+	 * @return
+	 */
+	public String digestFragmentName() {
+		String[] splitFragment = this.fragment.split("/");
+		return splitFragment[splitFragment.length-1];
+	}
 
 	/* Generated */
 	public String getURIString() {
@@ -165,6 +188,8 @@ public class JSONSchemaURI {
 	public String getFragment() {
 		return fragment;
 	}
+	
+	
 	
 	
 }
