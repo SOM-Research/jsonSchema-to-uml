@@ -1,7 +1,6 @@
 package edu.uoc.som.jsonschematouml.generators;
 
 import java.io.File;
-
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -16,6 +15,7 @@ import org.eclipse.uml2.uml.AggregationKind;
 import org.eclipse.uml2.uml.Class;
 import org.eclipse.uml2.uml.Comment;
 import org.eclipse.uml2.uml.Constraint;
+import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.Enumeration;
 import org.eclipse.uml2.uml.Model;
 import org.eclipse.uml2.uml.OpaqueExpression;
@@ -296,11 +296,12 @@ public class JSONSchemaToUML {
         if (object.has("required")) {
             // 6.5.3 section in json-validation
             // This constraint specifies the set of properties that have to be there (e.g., the min
-            // cardinality is 1
+            // cardinality is 1. Only properties that are not coming from arrays are touched (i.e., 
+        	// those properties with upper limit <= 1)
             for(JsonElement reqElem : object.get("required").getAsJsonArray()) {
                 String reqElemString = reqElem.getAsString();
                 for(Property property : concept.getOwnedAttributes()) {
-                    if(property.getName().equals(reqElemString)) {
+                    if(property.getName().equals(reqElemString) && property.getUpper() < 2) {
                         property.setLower(1);
                         break;
                     }
@@ -318,6 +319,8 @@ public class JSONSchemaToUML {
      * @param object The JSON object element to analyze
      */
     private void analyzeProperty(Class concept, String propertyName, JsonObject object) {
+    	Element createdElement = null;
+    	
         if(object.has("type")) {
             Type modelAttType = null;
             String propertyObjType = object.get("type").getAsString();
@@ -329,7 +332,7 @@ public class JSONSchemaToUML {
                     String enumValue = enumValueElem.getAsString();
                     enumeration.getOwnedLiterals().add(enumeration.createOwnedLiteral(enumValue));
                 }
-                concept.createOwnedAttribute(propertyName, enumeration);
+                createdElement = concept.createOwnedAttribute(propertyName, enumeration);
             } else if (propertyObjType.equals("string")) {
                 if(object.has("format")) {
                     String propertyFormat = object.get("format").getAsString();
@@ -351,10 +354,10 @@ public class JSONSchemaToUML {
                     // Section 6.3.3 in json-schema-validation. Resolved as OCL, possible?
                     // TODO 6.3.3 in json-schema-validation
                 }
-                concept.createOwnedAttribute(propertyName, modelAttType);
+                createdElement = concept.createOwnedAttribute(propertyName, modelAttType);
             } else if(propertyObjType.equals("integer") || propertyObjType.equals("number")) {
                 modelAttType = getPrimitiveType("Integer");
-                concept.createOwnedAttribute(propertyName, modelAttType);
+                createdElement = concept.createOwnedAttribute(propertyName, modelAttType);
                 if(object.has("multipleOf"))
                     // Section 6.2.1 in json-schema-validation. Resolved as OCL
                     addConstraint(concept, propertyName, "multipleOfConstraint",
@@ -377,13 +380,13 @@ public class JSONSchemaToUML {
                             "self." + propertyName + " > " + object.get("exclusiveMinimum").getAsString());
 
             } else if(propertyObjType.equals("boolean")) {
-                concept.createOwnedAttribute(propertyName, getPrimitiveType("Boolean"));
+            	createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("Boolean"));
             } else if(propertyObjType.equals("array")) {
-
+            	
             } else if (propertyObjType.equals("object")) {
                 String toCamelCase = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
                 Class target = analyzeObject(toCamelCase, object);
-                concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 0, -1, target, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+                createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 0, -1, target, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
                 if(object.has("maxProperties")) {
 
                 }
@@ -401,8 +404,24 @@ public class JSONSchemaToUML {
             proxy.owner = concept;
             associationsFound.put(refClassName, proxy);
         } else if(object.has("oneOf")) {
-            // TODO check this case
+            JsonArray oneOfArray = object.get("oneOf").getAsJsonArray();
+            for(JsonElement arrayElement : oneOfArray ) {
+            	if (arrayElement instanceof JsonObject) {
+					JsonObject arrayObject = (JsonObject) arrayElement;
+					
+					
+				}
+            }
+            
         } // TODO cover more cases according to the specification
+        
+        // We check if there is a description and add such info as comment to the created element
+        if(object.has("description")) {
+        	String description = object.get("description").getAsString();
+        	Comment comment = UMLFactory.eINSTANCE.createComment();
+        	comment.setBody("Description: " + description);
+        	createdElement.getOwnedComments().add(comment);
+        }
     }
 
     /**
