@@ -120,6 +120,27 @@ public class JSONSchemaToUMLTest extends TestCase {
     }
     
     @Test
+    public void testTitleDescription() {
+    	JSONSchemaToUML io = new JSONSchemaToUML("test");
+        File input = new File("inputs/testTitleDescription.json");
+        io.launch(input);
+        Model model = io.getModel();
+        io.saveModel(new File("outputs/model.uml"));
+
+        Class c = (Class) model.getPackagedElement("titleDescription");
+        assertNotNull(c);
+        assertTrue(c.getOwnedComments().size() > 0);
+        for(Comment comment : c.getOwnedComments()) {
+        	if(comment.getBody().startsWith("Title:")) {
+                assertEquals("Title: titleTest", comment.getBody());
+        	}
+        	if(comment.getBody().startsWith("Description:")) {
+                assertEquals("Description: descriptionTest", comment.getBody());
+        	}
+        }
+    }
+    
+    @Test
     public void testSet() {
         JSONSchemaToUML io = new JSONSchemaToUML("test");
         File input = new File("inputs/testSet");

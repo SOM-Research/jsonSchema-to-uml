@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschematouml/test/titleDescription/schema.json",
+  "title": "titleTest",
+  "description": "descriptionTest",
+  "type": "object",
+  "allOf": [
+    {
+      "properties": {
+        "att1": {
+          "type": "string"
+        }
+      }
+    }
+  ],
+  "required": [
+    "att1"
+  ]
+}

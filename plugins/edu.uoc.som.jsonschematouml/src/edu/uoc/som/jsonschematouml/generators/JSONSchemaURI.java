@@ -101,10 +101,10 @@ public class JSONSchemaURI {
 	/**
 	 * Digest the name of an object given an URI. It uses the last element of the path
 	 * of the URI (and removes the extension, if any).
-	 * 
+	 * <br>
 	 * For instance:
 	 *   foo://example.com:8042/over/there.json
-	 * 
+	 * <br>
 	 * returns:
 	 *   there
 	 * 
@@ -118,6 +118,27 @@ public class JSONSchemaURI {
 			return lastPathElement.substring(0, index);
 		}
 		return lastPathElement;
+	}
+	
+	/**
+	 * Digest the name of an schema in an URI. It uses the previous to last 
+	 * element of the path of the URI.
+	 * <br>
+	 * For instance:
+	 *   foo://example.com:8042/over/there.json
+	 * <br>
+	 * returns:
+	 *   over
+	 * 
+	 * @return String with the name digested
+	 */
+	public String digestIdName() {
+		String[] splitPath = this.path.split("/");
+		if(splitPath.length > 1) {
+			return splitPath[splitPath.length-2]; 
+		} else {
+			return splitPath[splitPath.length-1]; 
+		}
 	}
 
 	/* Generated */

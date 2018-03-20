@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.uml2.uml.AggregationKind;
 import org.eclipse.uml2.uml.Class;
+import org.eclipse.uml2.uml.Comment;
 import org.eclipse.uml2.uml.Constraint;
 import org.eclipse.uml2.uml.Enumeration;
 import org.eclipse.uml2.uml.Model;
@@ -44,6 +45,9 @@ import com.google.gson.stream.JsonReader;
  * @version 0.0.2
  */
 public class JSONSchemaToUML {
+	/**
+	 * The default name to give if no one is provided
+	 */
 	public static String DEFAULT_MODEL_NAME = "test";
 	
     /**
@@ -205,7 +209,7 @@ public class JSONSchemaToUML {
         String id = rootElement.get("id").getAsString();
         JSONSchemaURI jsu = new JSONSchemaURI(id);
         // Inferring concept for this schema
-        String modelConceptName = jsu.digestName();
+        String modelConceptName = jsu.digestIdName();
         analyzeRootSchemaElement(modelConceptName, rootElement);
     }
 
@@ -235,6 +239,22 @@ public class JSONSchemaToUML {
     private Class analyzeObject(String modelConceptName, JsonObject object) {
         // Creating the concept
         Class concept = model.createOwnedClass(modelConceptName, false);
+
+    	if(object.has("title")) {
+            // 10.1 section in json-validation
+    		String title = object.get("title").getAsString();
+    		Comment comment = UMLFactory.eINSTANCE.createComment();
+    		comment.setBody("Title: " + title);
+    		concept.getOwnedComments().add(comment);
+    	}
+    	
+    	if(object.has("description")) {
+            // 10.1 section in json-validation
+    		String title = object.get("description").getAsString();
+    		Comment comment = UMLFactory.eINSTANCE.createComment();
+    		comment.setBody("Description: " + title);
+    		concept.getOwnedComments().add(comment);
+    	}
 
         // Storing the concept
         oracle.put(modelConceptName, concept);
