@@ -339,9 +339,10 @@ public class JSONSchemaToUML {
                     if(propertyFormat.equals("date-time")) {
                         modelAttType = getPrimitiveType("Date");
                     }
-                } else {
-                    modelAttType = getPrimitiveType("String");
                 }
+                if(modelAttType == null)
+                    modelAttType = getPrimitiveType("String");
+                
                 if(object.has("maxLength"))
                     // Section 6.3.1 in json-schema-validation. Resolved as OCL
                     addConstraint(concept, propertyName, "maxLengthConstraint",
@@ -404,12 +405,24 @@ public class JSONSchemaToUML {
             proxy.owner = concept;
             associationsFound.put(refClassName, proxy);
         } else if(object.has("oneOf")) {
+            // Section 6.7.3 in json-schema-validation. 
+        	// We create a hierarchy for the options and then an associationg pointing at the hierarchy root
+        	
+        	String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
+        	Class optionClass = model.createOwnedClass(oneOfName, false);
+        	optionClass.setIsAbstract(true);
+        	createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 1, 1, optionClass, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+            
             JsonArray oneOfArray = object.get("oneOf").getAsJsonArray();
+            char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUWXYZ".toCharArray();
+            int counter = 0;
             for(JsonElement arrayElement : oneOfArray ) {
             	if (arrayElement instanceof JsonObject) {
 					JsonObject arrayObject = (JsonObject) arrayElement;
-					
-					
+					String conceptElementName = concept.getName() + "Option" + alphabet[counter++];
+					Class conceptElement = model.createOwnedClass(conceptElementName, false);
+			        analyzeProperty(conceptElement, "optionAttribute", arrayObject);
+			        conceptElement.getSuperClasses().add(optionClass);
 				}
             }
             
