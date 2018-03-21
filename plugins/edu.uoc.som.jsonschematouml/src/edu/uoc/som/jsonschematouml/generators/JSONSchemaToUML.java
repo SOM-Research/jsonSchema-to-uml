@@ -19,6 +19,7 @@ import org.eclipse.uml2.uml.Element;
 import org.eclipse.uml2.uml.Enumeration;
 import org.eclipse.uml2.uml.Model;
 import org.eclipse.uml2.uml.OpaqueExpression;
+import org.eclipse.uml2.uml.Package;
 import org.eclipse.uml2.uml.PrimitiveType;
 import org.eclipse.uml2.uml.Property;
 import org.eclipse.uml2.uml.Type;
@@ -110,6 +111,12 @@ public class JSONSchemaToUML {
      * The model being created, the target.
      */
     private Model model;
+    
+    /**
+     * We keep the current package being created
+     * TODO Try not to use an instance variable
+     */
+    private Package umlPackage;
 
     /**
      * We use this class as proxy when we cannot locate a referenced class
@@ -153,16 +160,7 @@ public class JSONSchemaToUML {
     public void launch(File inputFile) {
         if(inputFile == null || !inputFile.exists())
             throw new JSONSchemaToUMLException("The file must exist");
-
-        if(inputFile.isFile()) {
-            analyze(inputFile);
-        } else if(inputFile.isDirectory()) {
-            for(File inFile: inputFile.listFiles()) {
-                analyze(inFile);
-            }
-        } else
-            throw new JSONSchemaToUMLException("Invalid input");
-
+        analyze(inputFile);
         resolveAssociations();
         resolveSuperclasses();
     }
@@ -183,17 +181,40 @@ public class JSONSchemaToUML {
 		resourceSet.getPackageRegistry().put(UMLPackage.eNS_URI, UMLPackage.eINSTANCE);
 		resourceSet.getResourceFactoryRegistry().getExtensionToFactoryMap().put(UMLResource.FILE_EXTENSION, UMLResource.Factory.INSTANCE);
 
+        // Main package
+        umlPackage = model.createNestedPackage(modelName);
+        
 		// Class to reuse when something goes wrong
-        unknown = model.createOwnedClass("Unknown", false);
+        unknown = umlPackage.createOwnedClass("Unknown", false);
+        
     }
 
+    /**
+     * Analyzes a fodler/file. If it is a folder, it recursively navigates to find the files.
+     * Each inner folder becomes a UML package.
+     * 
+     * @param inputFile A Folder or a file to analyze.
+     */
+    private void analyze(File inputFile) {
+        if(inputFile.isFile()) {
+        	analyzeSchema(inputFile);
+        } else if(inputFile.isDirectory()) {
+        	Package oldPackage = umlPackage;
+        	umlPackage = oldPackage.createNestedPackage(inputFile.getName());
+            for(File inFile: inputFile.listFiles()) 
+                analyze(inFile);
+            umlPackage = oldPackage;
+        } else
+            throw new JSONSchemaToUMLException("Invalid input");
+    }
+    
     /**
      * Analyzes a file conforming to the JSON schema in order to create the corresponding UML elements (which will
      * be stored in both the oracle and the model)
      * 
      * @param file The file to analyze
      */
-    private void analyze(File file) {
+    private void analyzeSchema(File file) {
         // Let's start with the root element of the file
         JsonObject rootElement = null;
         try {
@@ -238,7 +259,7 @@ public class JSONSchemaToUML {
      */
     private Class analyzeObject(String modelConceptName, JsonObject object) {
         // Creating the concept
-        Class concept = model.createOwnedClass(modelConceptName, false);
+        Class concept = umlPackage.createOwnedClass(modelConceptName, false);
 
     	if(object.has("title")) {
             // 10.1 section in json-validation
@@ -409,7 +430,7 @@ public class JSONSchemaToUML {
         	// We create a hierarchy for the options and then an associationg pointing at the hierarchy root
         	
         	String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
-        	Class optionClass = model.createOwnedClass(oneOfName, false);
+        	Class optionClass = umlPackage.createOwnedClass(oneOfName, false);
         	optionClass.setIsAbstract(true);
         	createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 1, 1, optionClass, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
             
@@ -420,7 +441,7 @@ public class JSONSchemaToUML {
             	if (arrayElement instanceof JsonObject) {
 					JsonObject arrayObject = (JsonObject) arrayElement;
 					String conceptElementName = concept.getName() + "Option" + alphabet[counter++];
-					Class conceptElement = model.createOwnedClass(conceptElementName, false);
+					Class conceptElement = umlPackage.createOwnedClass(conceptElementName, false);
 			        analyzeProperty(conceptElement, "optionAttribute", arrayObject);
 			        conceptElement.getSuperClasses().add(optionClass);
 				}
