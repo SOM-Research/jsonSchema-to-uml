@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "id": "https://edu.uoc.som-research/jsonschematouml/test/anyInstance/schema.json",
+  "title": "Test data for any instance",
+  "description": "This schema contains data to test any instances (6.1 in validation JSON specificacion)",
+  "type": "object",
+  "allOf": [
+      "properties": {
+        "att1": {
+          "type": "boolean"
+        },
+        "att2": {
+          "type": "object"
+        },
+        "att3": {
+          "type": "array"
+        },
+        "att4": {
+          "type": "number"
+        },
+        "att5": {
+          "type": "integer"
+        },
+        "att6": {
+          "type": "string",
+          "enum": [
+            "val1",
+            "val2",
+            "val3"
+          ]
+        },
+        "att7": {
+          "type": "string",
+          "const" : "CONSTANT"
+        }
+      }
+    }
+  ],
+  "required": [
+    "att1"
+  ]
+}
