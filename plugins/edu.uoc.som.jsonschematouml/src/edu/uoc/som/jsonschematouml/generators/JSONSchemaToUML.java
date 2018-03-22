@@ -28,11 +28,14 @@ import org.eclipse.uml2.uml.UMLFactory;
 import org.eclipse.uml2.uml.UMLPackage;
 import org.eclipse.uml2.uml.resource.UMLResource;
 
+import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
+
+import edu.uoc.som.jsonschematouml.validator.JSONSchemaValidator;
 
 /**
  * Entry point for the JSONSchemaToUML tool. You should use this class as a façade for everything provided by the tool.
@@ -196,6 +199,15 @@ public class JSONSchemaToUML {
 	 */
 	private void analyze(File inputFile) {
 		if(inputFile.isFile()) {
+			// If the file is NOT a valid JSON Schema, we skip it
+			try {
+				if(!JSONSchemaValidator.validate(inputFile).isSuccess()) {
+					System.err.println("The file " + inputFile.getAbsolutePath() + " is not valid");
+					return;
+				}
+			} catch (ProcessingException | IOException e) {
+				throw new JSONSchemaToUMLException(e.getMessage());
+			}
 			analyzeSchema(inputFile);
 		} else if(inputFile.isDirectory()) {
 			Package oldPackage = umlPackage;
