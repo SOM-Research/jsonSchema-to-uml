@@ -2,7 +2,7 @@
 <feature
       id="edu.uoc.som.jsonschematouml.feature"
       label="JSONSchema to UML"
-      version="0.0.3.qualifier"
+      version="0.0.5.qualifier"
       provider-name="SOM Research Lab">
 
    <description url="https://github.com/SOM-Research/jsonSchema-to-uml">
@@ -91,7 +91,6 @@ Except as expressly stated in Sections 2(a) and 2(b) above, Recipient receives n
    </url>
 
    <requires>
-      <import plugin="com.google.gson" version="2.7.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.emf.ecore" version="2.13.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.emf.ecore.xmi" version="2.13.0" match="greaterOrEqual"/>
       <import plugin="org.eclipse.uml2.uml" version="5.3.0" match="greaterOrEqual"/>
@@ -99,6 +98,7 @@ Except as expressly stated in Sections 2(a) and 2(b) above, Recipient receives n
       <import plugin="org.eclipse.ui"/>
       <import plugin="org.eclipse.core.runtime"/>
       <import plugin="org.eclipse.core.resources"/>
+      <import plugin="com.google.gson" version="2.7.0" match="greaterOrEqual"/>
       <import plugin="org.junit"/>
    </requires>
 
@@ -106,14 +106,14 @@ Except as expressly stated in Sections 2(a) and 2(b) above, Recipient receives n
          id="edu.uoc.som.jsonschematouml"
          download-size="0"
          install-size="0"
-         version="0.0.3.qualifier"
+         version="0.0.5.qualifier"
          unpack="false"/>
 
    <plugin
          id="edu.uoc.som.jsonschematouml.test"
          download-size="0"
          install-size="0"
-         version="0.0.3.qualifier"
+         version="0.0.5.qualifier"
          unpack="false"/>
 
    <plugin

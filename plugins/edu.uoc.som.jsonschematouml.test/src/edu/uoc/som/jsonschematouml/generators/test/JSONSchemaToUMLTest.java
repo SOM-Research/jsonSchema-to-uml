@@ -147,4 +147,12 @@ public class JSONSchemaToUMLTest extends TestCase {
         io.launch(input);
         io.saveModel(new File("outputs/model.uml"));
     }
+    
+    @Test
+    public void testWrong() {
+        JSONSchemaToUML io = new JSONSchemaToUML("test");
+        File input = new File("inputs/testWrong.json");
+        io.launch(input);
+        io.saveModel(new File("outputs/model.uml"));
+    }
 }

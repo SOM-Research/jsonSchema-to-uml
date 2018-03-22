@@ -202,11 +202,12 @@ public class JSONSchemaToUML {
 			// If the file is NOT a valid JSON Schema, we skip it
 			try {
 				if(!JSONSchemaValidator.validate(inputFile).isSuccess()) {
-					System.err.println("The file " + inputFile.getAbsolutePath() + " is not valid");
+					System.err.println("The file " + inputFile.getAbsolutePath() + " is not a valid JSON Schema");
 					return;
 				}
-			} catch (ProcessingException | IOException e) {
-				throw new JSONSchemaToUMLException(e.getMessage());
+			} catch (IOException | ProcessingException e) {
+				System.err.println("The file " + inputFile.getAbsolutePath() + " is not a valid JSON file");
+				return;
 			}
 			analyzeSchema(inputFile);
 		} else if(inputFile.isDirectory()) {
