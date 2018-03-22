@@ -447,7 +447,6 @@ public class JSONSchemaToUML {
 			} else if(propertyObjType.equals("boolean")) {
 				createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("Boolean"));
 			} else if(propertyObjType.equals("array")) {
-
 				// Section 6.4.1 in json-schema-validation. 
 				if(object.has("items") && object.get("items").isJsonObject()) {
 					JsonObject itemsObject = object.get("items").getAsJsonObject();
@@ -458,8 +457,25 @@ public class JSONSchemaToUML {
 						createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("String"));
 						((Property) createdElement).setUpper(-1);
 					} else if (itemsObject.has("oneOf")) {
-						Association oneOfAssociation = analyseOneOf(concept, propertyName, propertyName + "Option", itemsObject);
+						Association oneOfAssociation = analyzeOneOf(concept, propertyName, propertyName + "Option", itemsObject);
+					} else if (itemsObject.has("properties")) {
+						String propertyConceptName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
+						Class propertyConcept = umlPackage.createOwnedClass(propertyConceptName, false);
+
+						JsonObject propertiesObj = itemsObject.get("properties").getAsJsonObject(); 
+						for (Entry<String, JsonElement> entry : propertiesObj.entrySet()) {
+							String propertyKey = entry.getKey();
+							JsonObject propertyObj = propertiesObj.get(propertyKey).getAsJsonObject();
+							analyzeProperty(propertyConcept, propertyKey, propertyObj);
+						}
 						
+						int upper = -1;
+						int lower = 0;
+						if(object.has("minItems"))
+							lower = object.get("minItems").getAsInt();
+						if(object.has("maxItems"))
+							upper = object.get("maxItems").getAsInt();
+						createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, lower, upper, propertyConcept, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
 					}
 				} else if(object.has("items") && object.get("items").isJsonArray()) {
 					JsonArray itemsObjectArray = object.get("items").getAsJsonArray();
@@ -496,7 +512,7 @@ public class JSONSchemaToUML {
 			associationsFound.put(jsu, proxy);
 		} else if(object.has("oneOf")) {
 			// Section 6.7.3 in json-schema-validation. 
-			Association oneOfAssociation = analyseOneOf(concept, propertyName, concept.getName() + "Option", object);
+			Association oneOfAssociation = analyzeOneOf(concept, propertyName, concept.getName() + "Option", object);
 		} 
 
 		// We check if there is a description and add such info as comment to the created element
@@ -520,7 +536,7 @@ public class JSONSchemaToUML {
 	 * @param object The JSON Object
 	 * @return The association
 	 */
-	private Association analyseOneOf(Class concept, String propertyName, String optionName, JsonObject object) {
+	private Association analyzeOneOf(Class concept, String propertyName, String optionName, JsonObject object) {
 		Association createdElement = null;
 		
 		String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
