@@ -459,6 +459,8 @@ public class JSONSchemaToUML {
 					} else if (itemsObject.has("oneOf")) {
 						Association oneOfAssociation = analyzeOneOf(concept, propertyName, propertyName + "Option", itemsObject);
 					} else if (itemsObject.has("properties")) {
+						// If an array includes an object with properties key it means that it defines an
+						// inner concept so we create a new UML class
 						String propertyConceptName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length());
 						Class propertyConcept = umlPackage.createOwnedClass(propertyConceptName, false);
 
@@ -511,9 +513,12 @@ public class JSONSchemaToUML {
 			proxy.owner = concept;
 			associationsFound.put(jsu, proxy);
 		} else if(object.has("oneOf")) {
-			// Section 6.7.3 in json-schema-validation. 
+			// Section 6.7.3 in json-schema-validation
 			Association oneOfAssociation = analyzeOneOf(concept, propertyName, concept.getName() + "Option", object);
-		} 
+		} else if(object.has("anyOf")) {
+			// Section 6.7.2 in json-schema-validation
+			Association oneOfAssociation = analyzeAnyOf(concept, propertyName, concept.getName() + "Option", object);
+		}
 
 		// We check if there is a description and add such info as comment to the created element
 		if(createdElement != null && object.has("description")) {
@@ -559,6 +564,44 @@ public class JSONSchemaToUML {
 		
 		return createdElement;
 	}
+	
+	/**
+	 * Factorizes the behavior for dealing with AnyOf schema element.
+	 * This method is almost a mirror of {@link JSONSchemaToUML.analyzeOneOf}
+	 * We create a hierarchy for the options and then an associationg pointing at the hierarchy root
+	 * 
+	 * Section 6.7.2 in json-schema-validation. 
+	 * 
+	 * @param concept The class that holds the property
+	 * @param propertyName The name of the property
+	 * @param optionName The name to give to the option class
+	 * @param object The JSON Object
+	 * @return The association
+	 */
+	private Association analyzeAnyOf(Class concept, String propertyName, String optionName, JsonObject object) {
+		Association createdElement = null;
+		
+		String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
+		Class optionClass = umlPackage.createOwnedClass(oneOfName, false);
+		optionClass.setIsAbstract(true);
+		createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 1, -1, optionClass, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+
+		JsonArray oneOfArray = object.get("anyOf").getAsJsonArray();
+		char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUWXYZ".toCharArray();
+		int counter = 0;
+		for(JsonElement arrayElement : oneOfArray ) {
+			if (arrayElement instanceof JsonObject) {
+				JsonObject arrayObject = (JsonObject) arrayElement;
+				String conceptElementName = optionName + alphabet[counter++];
+				Class conceptElement = umlPackage.createOwnedClass(conceptElementName, false);
+				analyzeProperty(conceptElement, "optionAttribute", arrayObject);
+				conceptElement.getSuperClasses().add(optionClass);
+			}
+		}
+		
+		return createdElement;
+	}
+	
 	
 	/**
 	 * Factorizes the behavior for enum types in properties.
