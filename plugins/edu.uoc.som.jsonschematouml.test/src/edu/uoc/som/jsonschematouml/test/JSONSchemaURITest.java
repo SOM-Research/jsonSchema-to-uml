@@ -90,4 +90,15 @@ public class JSONSchemaURITest extends TestCase {
 		jsu = new JSONSchemaURI(URI);
 		assertEquals("fragment", jsu.digestFragmentName());
 	}
+	
+	@Test
+	public void testDigestOnlyFragment() {
+		String URI = "#/fragment/name";
+		JSONSchemaURI jsu = new JSONSchemaURI(URI);
+		assertEquals("name", jsu.digestFragmentName());
+		
+		URI = "#/fragment";
+		jsu = new JSONSchemaURI(URI);
+		assertEquals("fragment", jsu.digestFragmentName());
+	}
 }

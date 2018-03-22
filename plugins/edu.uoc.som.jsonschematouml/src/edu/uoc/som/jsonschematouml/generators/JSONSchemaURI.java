@@ -46,30 +46,34 @@ public class JSONSchemaURI {
 	private void parseURIString() {
 		/* Extracting the scheme */
 		int index = this.URIString.indexOf(":");
-		if(index < 0) 
-			throw new JSONSchemaToUMLException("The URI must contain a scheme");
-		this.scheme = this.URIString.substring(0, index);
+		int startIndex = 0;
+		int endIndex = 0;
+		if(index >= 0) {
+			// The URI contains a scheme and therefore an authority
+			this.scheme = this.URIString.substring(0, index);
 		
-		/* Extracting the authority */
-		int startIndex = this.URIString.indexOf("//");
-		if(startIndex < 0)
-			throw new JSONSchemaToUMLException("The URI must contain an authority");
-		int endIndex = this.URIString.substring(startIndex+2).indexOf("/"); 
-		this.authority = this.URIString.substring(startIndex+2, startIndex+2+endIndex);
-		
-		/* Extracting the path */
-		startIndex = startIndex+2+endIndex;
-		endIndex = this.URIString.lastIndexOf("/");
-		endIndex = this.URIString.indexOf("?");
-		if(endIndex < 0 && this.URIString.indexOf("#") < 0) {
-			/* No query or fragment part */
-			this.path = this.URIString.substring(startIndex, this.URIString.length());
-			return;
-		} else if(endIndex < 0 && this.URIString.indexOf("#") > 0) {
-			/* No query part but fragment included */
-			endIndex = this.URIString.indexOf("#");
+			/* Extracting the authority */
+			startIndex = this.URIString.indexOf("//");
+			endIndex = 0;
+			if(startIndex >= 0) {
+				endIndex = this.URIString.substring(startIndex+2).indexOf("/"); 
+				this.authority = this.URIString.substring(startIndex+2, startIndex+2+endIndex);
+			}
+			
+			/* Extracting the path */
+			startIndex = startIndex+2+endIndex;
+			endIndex = this.URIString.lastIndexOf("/");
+			endIndex = this.URIString.indexOf("?");
+			if(endIndex < 0 && this.URIString.indexOf("#") < 0) {
+				/* No query or fragment part */
+				this.path = this.URIString.substring(startIndex, this.URIString.length());
+				return;
+			} else if(endIndex < 0 && this.URIString.indexOf("#") > 0) {
+				/* No query part but fragment included */
+				endIndex = this.URIString.indexOf("#");
+			}
+			this.path = this.URIString.substring(startIndex, endIndex);
 		}
-		this.path = this.URIString.substring(startIndex, endIndex);
 			
 		/* Extracting the query and fragment (if any) */
 		startIndex = endIndex;
