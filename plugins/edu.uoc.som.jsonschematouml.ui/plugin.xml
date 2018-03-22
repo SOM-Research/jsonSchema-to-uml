@@ -7,6 +7,7 @@
             allPopups="false"
             locationURI="popup:org.eclipse.ui.popup.any">
          <menu
+               icon="images/logo.png"
                label="JSONSchema to UML">
             <command
                   commandId="edu.uoc.som.jsonschematouml.ui.popup.handlers.ConvertToClassDiagram"
@@ -15,14 +16,27 @@
                   tooltip="Generate Class diagram from a JSON Schema document">
                <visibleWhen
                      checkEnabled="false">
-                  <iterate>
-                     <and>
-                        <test
-                              property="org.eclipse.core.resources.extension"
-                              value="json">
-                        </test>
-                     </and>
-                  </iterate>
+                  <and>
+                     <count
+                           value="+">
+                     </count>
+                     <iterate>
+                        <or>
+                           <adapt
+                                 type="org.eclipse.core.resources.IFolder">
+                           </adapt>
+                           <and>
+                              <adapt
+                                    type="org.eclipse.core.resources.IFile">
+                              </adapt>
+                              <test
+                                    property="org.eclipse.core.resources.extension"
+                                    value="json">
+                              </test>
+                           </and>
+                        </or>
+                     </iterate>
+                  </and>
                </visibleWhen>
             </command>
          </menu>

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JSONSchematoUML
 Bundle-SymbolicName: edu.uoc.som.jsonschematouml.ui;singleton:=true
-Bundle-Version: 0.0.1.qualifier
+Bundle-Version: 0.0.3.qualifier
 Bundle-Activator: edu.uoc.som.jsonschematouml.ui.JSONSchemaToUMLUIPlugin
 Bundle-Vendor: SOM Research Lab
 Require-Bundle: org.eclipse.ui,
