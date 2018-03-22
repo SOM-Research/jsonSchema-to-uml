@@ -1,6 +1,7 @@
+
 # jsonSchema-to-uml
 
-A tool to generate UML models from JSON schema documents
+A tool to generate UML models from JSON schema documents.
 
 ## Requirements
 
@@ -27,7 +28,8 @@ https://som-research.github.io/jsonSchema-to-uml/update/
 
 1. Create a Project or use an existing project in your workspace.
 2. Import the JSON Schema documents.
-3. Right-click on the definition file and select *JSONSchema to UML/Generate a Class diagram*. This will generate the UML model corresponding to the input definition under the folder *src-gen* of your project.
+3. To generate a UML model from your documents you can right-click on a file or a folder containing your documents.
+4. A UML model corresponding to the input definition will be generated in the folder *src-gen* of your project.
 
 ## Visualizing the Class diagram using Papyrus
 

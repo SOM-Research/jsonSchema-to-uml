@@ -33,6 +33,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.stream.JsonReader;
 
 import edu.uoc.som.jsonschematouml.validator.JSONSchemaValidator;
@@ -119,6 +120,11 @@ public class JSONSchemaToUML {
 	 * TODO Try not to use an instance variable
 	 */
 	private Package umlPackage;
+	
+	/**
+	 * We keep the root package (to add the primitive types)
+	 */
+	private Package rootPackage;
 
 	/**
 	 * We use this class as proxy when we cannot locate a referenced class
@@ -185,6 +191,7 @@ public class JSONSchemaToUML {
 
 		// Main package
 		umlPackage = model.createNestedPackage(modelName);
+		rootPackage = umlPackage;
 
 		// Class to reuse when something goes wrong
 		unknown = umlPackage.createOwnedClass("Unknown", false);
@@ -277,7 +284,8 @@ public class JSONSchemaToUML {
 	 */
 	private Class analyzeObject(String modelConceptName, JsonObject object) {
 		// Creating the concept
-		Class concept = umlPackage.createOwnedClass(modelConceptName, false);
+		String camelCasedModelConceptName = modelConceptName.substring(0, 1).toUpperCase() + modelConceptName.substring(1);
+		Class concept = umlPackage.createOwnedClass(camelCasedModelConceptName, false);
 
 		if(object.has("title")) {
 			// 10.1 section in json-validation
@@ -365,13 +373,30 @@ public class JSONSchemaToUML {
 	 */
 	private void analyzeProperty(Class concept, String propertyName, JsonObject object) {
 		Element createdElement = null;
+		boolean nullable = false;
 
-		if(object.has("type") && object.get("type").isJsonPrimitive()) {
+		if(object.has("type")) {
+			// We recover the type JSON element
+			// According to section 6.1.1 in json-schema-validation, type can be either a string
+			// or an array. If it is array, we only consider the first element, and take into 
+			// consideration the second value if it is a "null" value to set cardinality.
+			String propertyObjType = null;
+			if (object.get("type") instanceof JsonPrimitive) {
+				propertyObjType= object.get("type").getAsString();
+			} else if(object.get("type") instanceof JsonArray) {
+				JsonArray typeArray = (JsonArray) object.get("type").getAsJsonArray();
+				propertyObjType = typeArray.get(0).getAsString();
+				if(typeArray.size() > 1) {
+					if(typeArray.get(1).getAsString().equals("null"))
+						nullable = true; // TODO Consider in the metamodel. how exactly?
+				} 
+			}
+			
+			// We analyze the type
 			Type modelAttType = null;
-			String propertyObjType = object.get("type").getAsString();
 			if(object.has("enum")) {
 				// Section 6.1.2. We create an enumeration
-				analyzeEnumProperty(concept, propertyName, object);
+				createdElement = analyzeEnumProperty(concept, propertyName, object);
 			} else if (propertyObjType.equals("string")) {
 				if(object.has("format")) {
 					String propertyFormat = object.get("format").getAsString();
@@ -670,7 +695,7 @@ public class JSONSchemaToUML {
 		if(found == null) {
 			found = umlFactory.createPrimitiveType();
 			found.setName(typeName);
-			model.getOwnedTypes().add(found);
+			rootPackage.getOwnedTypes().add(found);
 			primitiveTypes.put(typeName, found);
 
 		} 
