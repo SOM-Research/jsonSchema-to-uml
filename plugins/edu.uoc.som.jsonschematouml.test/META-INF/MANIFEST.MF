@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: JSON Schema to UML test cases
 Bundle-SymbolicName: edu.uoc.som.jsonschematouml.test
-Bundle-Version: 0.0.5.qualifier
+Bundle-Version: 0.0.6.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-Vendor: SOM Research Lab
 Require-Bundle: com.google.gson;bundle-version="2.7.0",

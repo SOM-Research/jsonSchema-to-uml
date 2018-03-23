@@ -2,7 +2,7 @@
 <feature
       id="edu.uoc.som.jsonschematouml.feature"
       label="JSONSchema to UML"
-      version="0.0.5.qualifier"
+      version="0.0.6.qualifier"
       provider-name="SOM Research Lab">
 
    <description url="https://github.com/SOM-Research/jsonSchema-to-uml">
@@ -106,21 +106,21 @@ Except as expressly stated in Sections 2(a) and 2(b) above, Recipient receives n
          id="edu.uoc.som.jsonschematouml"
          download-size="0"
          install-size="0"
-         version="0.0.5.qualifier"
+         version="0.0.6.qualifier"
          unpack="false"/>
 
    <plugin
          id="edu.uoc.som.jsonschematouml.test"
          download-size="0"
          install-size="0"
-         version="0.0.5.qualifier"
+         version="0.0.6.qualifier"
          unpack="false"/>
 
    <plugin
          id="edu.uoc.som.jsonschematouml.ui"
          download-size="0"
          install-size="0"
-         version="0.0.3.qualifier"
+         version="0.0.6.qualifier"
          unpack="false"/>
 
 </feature>
