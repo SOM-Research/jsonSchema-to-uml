@@ -468,6 +468,8 @@ public class JSONSchemaToUML {
 						((Property) createdElement).setUpper(-1);
 					} else if (itemsObject.has("oneOf")) {
 						Association oneOfAssociation = analyzeOneOf(concept, propertyName, propertyName + "Option", itemsObject, true);
+					} else if (itemsObject.has("anyOf")) {
+						Association anyOfAssociation = analyzeAnyOf(concept, propertyName, propertyName + "Option", itemsObject);
 					} else if (itemsObject.has("allOf")) {
 						// TODO
 					} else if (itemsObject.has("properties")) {
