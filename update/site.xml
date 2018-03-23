@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/edu.uoc.som.jsonschematouml.feature_0.0.5.201803221439.jar" id="edu.uoc.som.jsonschematouml.feature" version="0.0.5.201803221439">
+   <feature url="features/edu.uoc.som.jsonschematouml.feature_0.0.6.201803231134.jar" id="edu.uoc.som.jsonschematouml.feature" version="0.0.6.201803231134">
       <category name="jsonschematouml"/>
    </feature>
    <category-def name="jsonschematouml" label="JSON Schema to UML">
