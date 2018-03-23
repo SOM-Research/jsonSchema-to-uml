@@ -138,7 +138,7 @@ public class JSONSchemaURI {
 	 */
 	public String digestIdName() {
 		String[] splitPath = this.path.split("/");
-		if(splitPath.length > 1) {
+		if(splitPath.length > 2) {
 			return splitPath[splitPath.length-2]; 
 		} else {
 			return splitPath[splitPath.length-1]; 
@@ -164,8 +164,12 @@ public class JSONSchemaURI {
 	 * @return
 	 */
 	public String digestFragmentName() {
-		String[] splitFragment = this.fragment.split("/");
-		return splitFragment[splitFragment.length-1];
+		if(this.fragment == null) {
+			return this.digestIdName();
+		} else {
+			String[] splitFragment = this.fragment.split("/");
+			return splitFragment[splitFragment.length-1];
+		}
 	}
 
 	/* Generated */

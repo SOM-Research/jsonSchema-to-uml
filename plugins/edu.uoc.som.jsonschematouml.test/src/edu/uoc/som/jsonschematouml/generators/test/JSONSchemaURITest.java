@@ -74,8 +74,15 @@ public class JSONSchemaURITest extends TestCase {
 	}
 
 	@Test
-	public void testDigestIdName() {
+	public void testDigestIdNameA() {
 		String URI = "foo://example.com:8042/over/there.json";
+		JSONSchemaURI jsu = new JSONSchemaURI(URI);
+		assertEquals("over", jsu.digestIdName());		
+	}
+	
+	@Test
+	public void testDigestIdNameB() {
+		String URI = "foo://example.com:8042/over";
 		JSONSchemaURI jsu = new JSONSchemaURI(URI);
 		assertEquals("over", jsu.digestIdName());		
 	}
@@ -101,4 +108,6 @@ public class JSONSchemaURITest extends TestCase {
 		jsu = new JSONSchemaURI(URI);
 		assertEquals("fragment", jsu.digestFragmentName());
 	}
+	
+	
 }

@@ -243,13 +243,13 @@ public class JSONSchemaToUML {
 			e.printStackTrace();
 		}
 
+		String modelConceptName = file.getName().substring(0, file.getName().indexOf("."));
 		// Basic info from the schema
-		if(!rootElement.has("id")) 
-			throw new JSONSchemaToUMLException("The root element MUST have an id");
-		String id = rootElement.get("id").getAsString();
-		JSONSchemaURI jsu = new JSONSchemaURI(id);
-		// Inferring concept for this schema
-		String modelConceptName = jsu.digestIdName();
+		if(rootElement.has("id")) { 
+			String id = rootElement.get("id").getAsString();
+			JSONSchemaURI jsu = new JSONSchemaURI(id);
+			modelConceptName = jsu.digestIdName();
+		}
 		analyzeRootSchemaElement(modelConceptName, rootElement);
 	}
 
