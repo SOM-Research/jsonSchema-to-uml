@@ -260,20 +260,14 @@ public class JSONSchemaToUML {
 	 * @param rootElement The JSON root element
 	 */
 	private void analyzeRootSchemaElement(String name, JsonObject rootElement) {
-		if(rootElement.has("type")) {
-			String type = rootElement.get("type").getAsString();
+		if(rootElement.has("type") || rootElement.has("allOf")) {
 			analyzeObject(name, rootElement);
-//			switch (type) {
-//			case "object":
-//				analyzeObject(name, rootElement);
-//				break;
-//			case "string":
-//				analyzeObject(name, rootElement);
-//				break;
-//			}
-		} else if(!rootElement.has("type") && rootElement.has("definitions")) {
+		} 
+		
+		if(rootElement.has("definitions")) {
+			// Section 9 in json-validation
 			analyzeDefinitions(rootElement);
-		} // TODO Cover other cases
+		} 
 	}
 
 	/**
@@ -330,6 +324,8 @@ public class JSONSchemaToUML {
 					}
 				} 
 			}
+		} else if (object.has("oneOf")) { 
+			analyzeOneOf(concept, concept.getName(), concept.getName() + "Option", object, false);
 		} else if (object.has("properties")) {
 			// When an element has directly "properties" may mean that it does not have superclasses
 			// It is also used in definitions
@@ -448,16 +444,32 @@ public class JSONSchemaToUML {
 				createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("Boolean"));
 			} else if(propertyObjType.equals("array")) {
 				// Section 6.4.1 in json-schema-validation. 
-				if(object.has("items") && object.get("items").isJsonObject()) {
-					JsonObject itemsObject = object.get("items").getAsJsonObject();
+				
+				// If the items key is an array, we only consider the first one
+				// (as in UML we cannot have a multi-valued attribute with multitypes
+				// TODO Should we created a hierarchy?
+				
+				JsonObject itemsObject = null;
+				if(object.has("items") && object.get("items").isJsonArray()) {
+					itemsObject = object.get("items").getAsJsonArray().get(0).getAsJsonObject();
+				} else {
+					itemsObject = object.get("items").getAsJsonObject();
+				}
+				
+				if(object.has("items")) {
 					if(itemsObject.has("enum")) {
 						createdElement = analyzeEnumProperty(concept, propertyName, itemsObject);
 						((Property) createdElement).setUpper(-1);
 					} else if(itemsObject.has("type") && itemsObject.get("type").getAsString().equals("string")) { 
 						createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("String"));
 						((Property) createdElement).setUpper(-1);
+					} else if(itemsObject.has("type") && itemsObject.get("type").getAsString().equals("number")) { 
+						createdElement = concept.createOwnedAttribute(propertyName, getPrimitiveType("Integer"));
+						((Property) createdElement).setUpper(-1);
 					} else if (itemsObject.has("oneOf")) {
-						Association oneOfAssociation = analyzeOneOf(concept, propertyName, propertyName + "Option", itemsObject);
+						Association oneOfAssociation = analyzeOneOf(concept, propertyName, propertyName + "Option", itemsObject, true);
+					} else if (itemsObject.has("allOf")) {
+						// TODO
 					} else if (itemsObject.has("properties")) {
 						// If an array includes an object with properties key it means that it defines an
 						// inner concept so we create a new UML class
@@ -478,6 +490,8 @@ public class JSONSchemaToUML {
 						if(object.has("maxItems"))
 							upper = object.get("maxItems").getAsInt();
 						createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, lower, upper, propertyConcept, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+					} else if(itemsObject.has("$ref")) {
+						analyzeRef(concept, propertyName, itemsObject);
 					}
 				} else if(object.has("items") && object.get("items").isJsonArray()) {
 					JsonArray itemsObjectArray = object.get("items").getAsJsonArray();
@@ -501,20 +515,10 @@ public class JSONSchemaToUML {
 				createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 0, 1, target, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
 			} 
 		} else if(object.has("$ref")) {
-			String ref = object.get("$ref").getAsString();
-			JSONSchemaURI jsu = new JSONSchemaURI(ref);
-			String refClassName = jsu.digestFragmentName();
-			ProxyAssociation proxy = new ProxyAssociation();
-			proxy.sourceComposition = true; proxy.targetComposition = false;
-			proxy.sourceKind = AggregationKind.NONE_LITERAL; proxy.targetKind = AggregationKind.NONE_LITERAL;
-			proxy.sourceEnd = propertyName; proxy.targetEnd = refClassName;
-			proxy.sourceLower = 0; proxy.targetLower = 1;
-			proxy.sourceUpper = 1; proxy.targetUpper = 1;
-			proxy.owner = concept;
-			associationsFound.put(jsu, proxy);
+			analyzeRef(concept, propertyName, object);
 		} else if(object.has("oneOf")) {
 			// Section 6.7.3 in json-schema-validation
-			Association oneOfAssociation = analyzeOneOf(concept, propertyName, concept.getName() + "Option", object);
+			Association oneOfAssociation = analyzeOneOf(concept, propertyName, concept.getName() + "Option", object, true);
 		} else if(object.has("anyOf")) {
 			// Section 6.7.2 in json-schema-validation
 			Association oneOfAssociation = analyzeAnyOf(concept, propertyName, concept.getName() + "Option", object);
@@ -530,6 +534,30 @@ public class JSONSchemaToUML {
 	}
 
 	/**
+	 * Analyzes $ref elements. They are usualy pointers to other elements so an association proxy is created
+	 * 
+	 * @param concept The concept holding the attribute which is a $ref
+	 * @param propertyName The attribute which is a $ref
+	 * @param object The object including the $ref information
+	 */
+	private void analyzeRef(Class concept, String propertyName, JsonObject object) {
+		if(!object.has("$ref")) 
+			throw new JSONSchemaToUMLException("The object must include an '$ref' key");
+		
+		String ref = object.get("$ref").getAsString();
+		JSONSchemaURI jsu = new JSONSchemaURI(ref);
+		String refClassName = jsu.digestFragmentName();
+		ProxyAssociation proxy = new ProxyAssociation();
+		proxy.sourceComposition = true; proxy.targetComposition = false;
+		proxy.sourceKind = AggregationKind.NONE_LITERAL; proxy.targetKind = AggregationKind.NONE_LITERAL;
+		proxy.sourceEnd = propertyName; proxy.targetEnd = refClassName;
+		proxy.sourceLower = 0; proxy.targetLower = 1;
+		proxy.sourceUpper = 1; proxy.targetUpper = 1;
+		proxy.owner = concept;
+		associationsFound.put(jsu, proxy);
+	}
+
+	/**
 	 * Factorizes the behavior for dealing with OneOf schema element.
 	 * We create a hierarchy for the options and then an associationg pointing at the hierarchy root
 	 * 
@@ -537,17 +565,23 @@ public class JSONSchemaToUML {
 	 * 
 	 * @param concept The class that holds the property
 	 * @param propertyName The name of the property
-	 * @param optionName The name to give to the option class
+	 * @param conceptOptionName The name to give to the option class
 	 * @param object The JSON Object
+	 * @param mapAsAssociation If true, the options are used as association. Otherwise it will be a hierarchy
 	 * @return The association
 	 */
-	private Association analyzeOneOf(Class concept, String propertyName, String optionName, JsonObject object) {
+	private Association analyzeOneOf(Class concept, String propertyName, String conceptOptionName, JsonObject object, boolean mapAsAssociation) {
 		Association createdElement = null;
 		
-		String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
-		Class optionClass = umlPackage.createOwnedClass(oneOfName, false);
-		optionClass.setIsAbstract(true);
-		createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 1, 1, optionClass, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+		Class optionClass = null;
+		if(mapAsAssociation) {
+			String oneOfName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1, propertyName.length()) + "Option";
+			optionClass = umlPackage.createOwnedClass(oneOfName, false);
+			optionClass.setIsAbstract(true);
+			createdElement = concept.createAssociation(true, AggregationKind.NONE_LITERAL, propertyName, 1, 1, optionClass, false, AggregationKind.NONE_LITERAL, concept.getName(), 1, 1);
+		} else {
+			optionClass = concept;
+		}
 
 		JsonArray oneOfArray = object.get("oneOf").getAsJsonArray();
 		char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUWXYZ".toCharArray();
@@ -555,10 +589,17 @@ public class JSONSchemaToUML {
 		for(JsonElement arrayElement : oneOfArray ) {
 			if (arrayElement instanceof JsonObject) {
 				JsonObject arrayObject = (JsonObject) arrayElement;
-				String conceptElementName = optionName + alphabet[counter++];
-				Class conceptElement = umlPackage.createOwnedClass(conceptElementName, false);
-				analyzeProperty(conceptElement, "optionAttribute", arrayObject);
-				conceptElement.getSuperClasses().add(optionClass);
+				String conceptElementName = conceptOptionName + alphabet[counter++];
+				if(arrayObject.has("type") || arrayObject.has("$ref")) {
+					// We are dealing with an inline object (no schema header)
+					Class conceptElement = umlPackage.createOwnedClass(conceptElementName, false);
+					analyzeProperty(conceptElement, "optionAttribute", arrayObject);
+					conceptElement.getSuperClasses().add(optionClass);	
+				} else if(arrayObject.has("properties" )) {
+					// We are deadling with a schema definition (with headers like "title")
+					Class conceptElement = analyzeObject(conceptElementName, arrayObject);
+					conceptElement.getSuperClasses().add(optionClass);	
+				}
 			}
 		}
 		
