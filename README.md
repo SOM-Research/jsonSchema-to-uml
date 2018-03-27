@@ -1,4 +1,5 @@
 
+
 # jsonSchema-to-uml
 
 A tool to generate UML models from JSON schema documents.
@@ -40,3 +41,14 @@ https://som-research.github.io/jsonSchema-to-uml/update/
 5. Drag-and-drop the UML elements from the *Model Explrer* into the editor.
 6. Align and arrange the layout as you prefer.
 7. Save.
+
+## The mapping in a nutshell
+The generation process apply this (non exhaustive) list of mappings:
+* Each JSON Schema element is represented by a UML Class
+* Properties in JSON Schema elements represent the properties of a UML Class. 
+  * If the property is of primitive type it will become an attribute in the UML Class
+  * If the property is of type enum, an Enumeration will be created and an attribute in the UML Class will be added
+  * If the property is of type object or refers to other element (using $ref), an association is created in the UML Class. The type of the association corresponds to the UML Class element created from the object (or the referred object)
+* Hierarchies are created from ``allOf``, ``oneOf``, ``anyOf``
+* The elements defined in ``definitions`` are considered as a library of JSON Schema elements and therefore they generate new UML Classes
+* The folder structure is used to created UML Packages containing the UML Classes coming from the JSON Schema files.
