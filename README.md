@@ -28,8 +28,8 @@ https://som-research.github.io/jsonSchema-to-uml/update/
 ## Using the plugin
 
 1. Create a Project or use an existing project in your workspace.
-2. Import the JSON Schema documents.
-3. To generate a UML model from your documents you can right-click on a file or a folder containing your documents.
+2. [Import](https://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2FgettingStarted%2Fqs-31a.htm) the JSON Schema documents in your Eclipse project.
+3. To generate a UML model from your documents you can right-click on a JSON file of your project or a folder containing your documents, and select the *JSONSchema to UML/Generate Class diagram* option.
 4. A UML model corresponding to the input definition will be generated in the folder *src-gen* of your project.
 
 ## Visualizing the Class diagram using Papyrus
